@@ -1,22 +1,22 @@
 package org.careconnect.careconnectbooking.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
-import org.careconnect.careconnectbooking.dto.BookingDto;
-import org.careconnect.careconnectbooking.dto.CheckUpDto;
-import org.careconnect.careconnectbooking.dto.DoctorDto;
-import org.careconnect.careconnectbooking.dto.PatientDto;
+import org.careconnect.careconnectbooking.dto.*;
 import org.careconnect.careconnectcommon.entity.BookingAppointment;
 import org.careconnect.careconnectbooking.repo.BookingAppointmentRepository;
 import org.careconnect.careconnectbooking.responce.ApiResponse;
 import org.careconnect.careconnectbooking.service.BookingService;
 import org.careconnect.careconnectbooking.service.serviceImpl.PatientServiceImpl;
+import org.careconnect.careconnectcommon.response.dto.DoctorDto;
+import org.careconnect.careconnectcommon.response.dto.PatientDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 public class BookingController {
@@ -32,9 +32,20 @@ public class BookingController {
     @Autowired
     BookingService bookingService;
 
+    @Autowired
+    ObjectMapper objectMapper;
+
+    /*
+     * This API is for making appointments with a doctor
+     *
+     * @param bookingDto BookingDto
+     * @return apiResponse
+     */
+    @Operation(summary = "Make appointment with a doctor")
     @PostMapping("/patient/appointments")
     public ResponseEntity<ApiResponse> postBooking(@Valid @RequestBody BookingDto bookingDto) {
-        PatientDto patientDto = patientService.getPatientById(bookingDto.getPatientId());
+
+        PatientDto patientDto = objectMapper.convertValue(patientService.getPatientById(bookingDto.getPatientId()),PatientDto.class);
         DoctorDto doctorDto = bookingService.getDoctor(bookingDto);
 
         bookingService.checkConflictOfDateAndTime(bookingDto,doctorDto);
@@ -49,15 +60,19 @@ public class BookingController {
     }
 
     @GetMapping("/booking")
-    public ResponseEntity<ApiResponse> retrieveBooking(@RequestBody BookingDto bookingDto){
+    public ResponseEntity<ApiResponse> retrieveBooking(@RequestBody BookingRetrieveDto bookingRetrieveDto){
         ApiResponse apiResponse=new ApiResponse();
-        apiResponse.setData(bookingService.getBookingAppointments(bookingDto));
+       apiResponse.setData(bookingService.getBooking(bookingRetrieveDto));
         return ResponseEntity.ok(apiResponse);
     }
 
+    /*
+    * this api is for only completing the booking
+    * */
     @PostMapping("/checkup")
-    public ResponseEntity<ApiResponse> checkUp(@RequestBody CheckUpDto checkUpDto){
-        BookingAppointment bookingAppointments=bookingService.checkUp(checkUpDto);
+    @Hidden
+    public ResponseEntity<ApiResponse> checkUp(@RequestBody RequestDto requestDto){
+        BookingAppointment bookingAppointments=bookingService.checkUp(requestDto);
         ApiResponse apiResponse=new ApiResponse();
         apiResponse.setData(bookingAppointments);
         return ResponseEntity.ok(apiResponse);

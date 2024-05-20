@@ -24,7 +24,6 @@ public class BookingDto {
     private LocalDate appointmentDate;
 
     @ValidAppointmentTime
-    @NotEmpty(message = "Appointment Date cannot be empty")
     @NotNull(message = "Appointment Date cannot be null")
     @DateTimeFormat(pattern = "HH:mm"/*, message = "Appointment Time should be in the format HH:mm"*/)
     private LocalTime appointmentStartTime;

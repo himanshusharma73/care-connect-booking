@@ -1,23 +1,26 @@
 package org.careconnect.careconnectbooking.service.serviceImpl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.constraints.NotNull;
-import org.careconnect.careconnectbooking.controller.BookingController;
-import org.careconnect.careconnectbooking.dto.BookingDto;
-import org.careconnect.careconnectbooking.dto.CheckUpDto;
-import org.careconnect.careconnectbooking.dto.DoctorDto;
-import org.careconnect.careconnectbooking.dto.PatientDto;
+import org.careconnect.careconnectbooking.dto.*;
+import org.careconnect.careconnectbooking.util.CopyProperties;
 import org.careconnect.careconnectcommon.entity.BookingAppointment;
+import org.careconnect.careconnectcommon.entity.DoctorEntity;
 import org.careconnect.careconnectcommon.exception.BookingDtoException;
 import org.careconnect.careconnectbooking.repo.BookingAppointmentRepository;
 import org.careconnect.careconnectbooking.service.BookingService;
 import org.careconnect.careconnectbooking.service.DoctorService;
 import org.careconnect.careconnectbooking.service.PatientService;
+import org.careconnect.careconnectcommon.response.BookingResponse;
+import org.careconnect.careconnectcommon.response.dto.DoctorDto;
+import org.careconnect.careconnectcommon.response.dto.PatientDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,11 +35,21 @@ public class BookingServiceImpl implements BookingService {
     @Autowired
     PatientService patientService;
 
+    @Autowired
+    ObjectMapper objectMapper;
+
+    @Autowired
+    CopyProperties copyProperties;
+
     private final Logger logger= LoggerFactory.getLogger(BookingServiceImpl.class);
 
+    @Override
     public DoctorDto getDoctor(@NotNull BookingDto bookingDto) {
         if (bookingDto.getDoctorId() != null) {
-            return doctorService.getDoctorById(bookingDto.getDoctorId());
+            DoctorEntity doctorEntity = doctorService.getDoctorById(bookingDto.getDoctorId());
+            DoctorDto doctorDto=new DoctorDto();
+            doctorDto.setDoctorId(doctorEntity.getDoctorId());
+            return doctorDto;
 
         } else if (bookingDto.getSpecialization() != null) {
             return doctorService.getDoctorBySpecialization(bookingDto.getSpecialization());
@@ -71,31 +84,45 @@ public class BookingServiceImpl implements BookingService {
         }
     }
 
+    @Override
     public BookingAppointment bookAppointment(DoctorDto doctorDto, PatientDto patientDto, BookingDto bookingDto) {
         return new BookingAppointment(doctorDto.getDoctorId(), patientDto.getPatientId(), bookingDto.getAppointmentDate(), bookingDto.getAppointmentStartTime(), bookingDto.getAppointmentStartTime().plusMinutes(30), "active");
     }
 
-    public List<BookingAppointment> getBookingAppointments(BookingDto bookingDto) {
-        if (bookingDto == null) {
+    public  List<BookingAppointment> getBookingAppointments(BookingRetrieveDto bookingRetrieveDto) {
+        if (bookingRetrieveDto == null) {
             throw new BookingDtoException("Enter details to retrieve Booking details");
         }
 
-        return bookingAppointmentRepository.findAll().stream().filter(booking -> matchesCriteria(booking, bookingDto)).collect(Collectors.toList());
-    }
-
-
-    private boolean matchesCriteria(BookingAppointment booking, BookingDto bookingDto) {
-        return (bookingDto.getDoctorId() == null || booking.getDoctorId() == (bookingDto.getDoctorId()))
-                && (bookingDto.getPatientId() == null || booking.getPatientId().equals(bookingDto.getPatientId()))
-                && (bookingDto.getAppointmentDate() == null || booking.getAppointmentDate().equals(bookingDto.getAppointmentDate()))
-                && (bookingDto.getAppointmentStartTime() == null || booking.getAppointmentStartTime().equals(bookingDto.getAppointmentStartTime()));
+        return Optional.of(bookingAppointmentRepository.findAll().stream()
+                        .filter(booking -> matchesCriteria(booking, bookingRetrieveDto))
+                        .collect(Collectors.toList()))
+                .filter(list -> !list.isEmpty())
+                .orElseThrow(() -> new BookingDtoException("No booking matches the criteria"));
     }
 
     @Override
-    public BookingAppointment checkUp(CheckUpDto checkUpDto) {
+    public List<BookingResponse> getBooking(BookingRetrieveDto bookingRetrieveDto) {
+        List<BookingAppointment> bookingAppointments=getBookingAppointments(bookingRetrieveDto);
+        List<BookingResponse> bookingResponse = bookingAppointments.stream().map(bookingAppointment -> copyProperties.copyPropertiesToBooking(bookingAppointment)).collect(Collectors.toList()); ;
+        return bookingResponse;
 
-        BookingAppointment bookingAppointment=bookingAppointmentRepository.findByPatientIdAndDoctorIdAndAppointmentDate(checkUpDto.getPatientId()
-                ,checkUpDto.getDoctorId(),checkUpDto.getAppointmentDate());
+    }
+
+
+    private boolean matchesCriteria(BookingAppointment booking, BookingRetrieveDto bookingRetrieveDto) {
+        return (bookingRetrieveDto.getDoctorId() == null || booking.getDoctorId() == (bookingRetrieveDto.getDoctorId()))
+                && (bookingRetrieveDto.getPatientId() == null || booking.getPatientId().equals(bookingRetrieveDto.getPatientId()))
+                && (bookingRetrieveDto.getAppointmentDate() == null || booking.getAppointmentDate().equals(bookingRetrieveDto.getAppointmentDate()))
+                && (bookingRetrieveDto.getAppointmentStartTime() == null || booking.getAppointmentStartTime().equals(bookingRetrieveDto.getAppointmentStartTime()))
+                && (bookingRetrieveDto.getStatus() == null || booking.getStatus().equals(bookingRetrieveDto.getStatus()));
+    }
+
+    @Override
+    public BookingAppointment checkUp(RequestDto requestDto) {
+
+        BookingAppointment bookingAppointment=bookingAppointmentRepository.findByPatientIdAndDoctorIdAndAppointmentDate(requestDto.getPatientId()
+                ,requestDto.getDoctorId(),requestDto.getAppointmentDate());
         if (bookingAppointment!=null){
             logger.info("Booking retrieved successfully {} ",bookingAppointment);
             bookingAppointment.setStatus("completed");

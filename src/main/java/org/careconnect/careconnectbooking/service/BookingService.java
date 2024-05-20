@@ -1,11 +1,11 @@
 package org.careconnect.careconnectbooking.service;
 
 import jakarta.validation.constraints.NotNull;
-import org.careconnect.careconnectbooking.dto.BookingDto;
-import org.careconnect.careconnectbooking.dto.CheckUpDto;
-import org.careconnect.careconnectbooking.dto.DoctorDto;
-import org.careconnect.careconnectbooking.dto.PatientDto;
+import org.careconnect.careconnectbooking.dto.*;
 import org.careconnect.careconnectcommon.entity.BookingAppointment;
+import org.careconnect.careconnectcommon.response.BookingResponse;
+import org.careconnect.careconnectcommon.response.dto.DoctorDto;
+import org.careconnect.careconnectcommon.response.dto.PatientDto;
 
 import java.util.List;
 
@@ -15,7 +15,8 @@ public interface BookingService {
     void checkConflictOfDateAndTime(BookingDto bookingDto,DoctorDto doctorDto);
 
     BookingAppointment bookAppointment(DoctorDto doctorDto, PatientDto patientDto, BookingDto bookingDto);
-    public List<BookingAppointment> getBookingAppointments(BookingDto bookingDto);
 
-    public BookingAppointment checkUp(CheckUpDto checkUpDto);
+    List<BookingResponse> getBooking(BookingRetrieveDto bookingRetrieveDto);
+
+    BookingAppointment checkUp(RequestDto requestDto);
 }

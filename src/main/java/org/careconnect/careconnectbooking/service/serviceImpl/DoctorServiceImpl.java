@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
 import org.careconnect.careconnectbooking.bookingproxy.AdminServiceFeignClient;
 import org.careconnect.careconnectbooking.controller.BookingController;
-import org.careconnect.careconnectbooking.dto.DoctorDto;
+import org.careconnect.careconnectcommon.response.dto.DoctorDto;
 import org.careconnect.careconnectcommon.exception.BookingDtoException;
 import org.careconnect.careconnectcommon.exception.ResourceNotFoundException;
 import org.careconnect.careconnectbooking.responce.ApiResponse;
@@ -24,17 +24,19 @@ public class DoctorServiceImpl implements DoctorService {
     @Autowired
     AdminServiceFeignClient adminServiceFeignClient;
 
+    @Autowired
+    ObjectMapper objectMapper;
+
     @Override
-    public DoctorDto getDoctorById(@PathVariable long doctorId) {
+    public <T> T getDoctorById(@PathVariable long doctorId) {
         try {
             ApiResponse apiResponse = adminServiceFeignClient.getDoctorById(doctorId);
 
             if (apiResponse.getData() != null) {
-                ObjectMapper objectMapper = new ObjectMapper();
                 DoctorDto doctorDto = objectMapper.convertValue(apiResponse.getData(), DoctorDto.class);
 
                 this.logger.info("Doctor retrieved successfully"+ Collections.singletonList(doctorDto));
-                return doctorDto;
+                return (T) doctorDto;
             }
             else{
                 throw new ResourceNotFoundException("Doctor", "Id", String.valueOf(doctorId));
