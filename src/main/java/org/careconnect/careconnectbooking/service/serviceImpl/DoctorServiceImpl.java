@@ -49,7 +49,7 @@ public class DoctorServiceImpl implements DoctorService {
 
 
     @Override
-    public DoctorDto getDoctorBySpecialization(@PathVariable String specialization) {
+    public DoctorDto getDoctorBySpecialization(String specialization) {
         try {
             ApiResponse apiResponse = adminServiceFeignClient.getDoctorBySpecialization(specialization);
 
