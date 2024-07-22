@@ -86,7 +86,9 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingAppointment bookAppointment(DoctorDto doctorDto, PatientDto patientDto, BookingDto bookingDto) {
-        return new BookingAppointment(doctorDto.getDoctorId(), patientDto.getPatientId(), bookingDto.getAppointmentDate(), bookingDto.getAppointmentStartTime(), bookingDto.getAppointmentStartTime().plusMinutes(30), "active");
+        return new BookingAppointment(doctorDto.getDoctorId(), patientDto.getPatientId(),
+                bookingDto.getAppointmentDate(), bookingDto.getAppointmentStartTime(),
+                bookingDto.getAppointmentStartTime().plusMinutes(30), "active");
     }
 
     public  List<BookingAppointment> getBookingAppointments(BookingRetrieveDto bookingRetrieveDto) {
@@ -102,7 +104,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingResponse> getBooking(BookingRetrieveDto bookingRetrieveDto) {
+    public List<BookingResponse> getAppointment(BookingRetrieveDto bookingRetrieveDto) {
         List<BookingAppointment> bookingAppointments=getBookingAppointments(bookingRetrieveDto);
         List<BookingResponse> bookingResponse = bookingAppointments.stream().map(bookingAppointment -> copyProperties.copyPropertiesToBooking(bookingAppointment)).collect(Collectors.toList()); ;
         return bookingResponse;
@@ -124,7 +126,7 @@ public class BookingServiceImpl implements BookingService {
         BookingAppointment bookingAppointment=bookingAppointmentRepository.findByPatientIdAndDoctorIdAndAppointmentDate(requestDto.getPatientId()
                 ,requestDto.getDoctorId(),requestDto.getAppointmentDate());
         if (bookingAppointment!=null){
-            logger.info("Booking retrieved successfully {} ",bookingAppointment);
+            logger.info("Appointment retrieved successfully {} ",bookingAppointment);
             bookingAppointment.setStatus("completed");
             bookingAppointmentRepository.save(bookingAppointment);
             return bookingAppointment;

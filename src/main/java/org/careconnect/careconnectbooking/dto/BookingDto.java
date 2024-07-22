@@ -18,7 +18,6 @@ public class BookingDto {
     @NotNull(message = "Patient id cannot be null")
     private Long patientId;
 
-    @Future(message = "Appointment Date should be in future")
     @NotNull(message = "Appointment Date cannot be null")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate appointmentDate;

@@ -52,7 +52,7 @@ public class BookingController {
      */
     @Operation(summary = "Make appointment with a doctor")
     @PostMapping("/patient/appointments")
-    public ResponseEntity<ApiResponse> postBooking(@Valid @RequestBody BookingDto bookingDto) {
+    public ResponseEntity<ApiResponse> postAppointment(@Valid @RequestBody BookingDto bookingDto) {
 
         PatientDto patientDto = objectMapper.convertValue(patientService.getPatientById(bookingDto.getPatientId()),PatientDto.class);
         DoctorDto doctorDto = bookingService.getDoctor(bookingDto);
@@ -69,9 +69,10 @@ public class BookingController {
     }
 
     @PostMapping("/appointment")
-    public ResponseEntity<ApiResponse> retrieveBooking(@RequestBody BookingRetrieveDto bookingRetrieveDto){
+    @Operation(summary = "Search Appointment")
+    public ResponseEntity<ApiResponse> retrieveAppointment(@RequestBody BookingRetrieveDto bookingRetrieveDto){
         ApiResponse apiResponse=new ApiResponse();
-       apiResponse.setData(bookingService.getBooking(bookingRetrieveDto));
+       apiResponse.setData(bookingService.getAppointment(bookingRetrieveDto));
         return ResponseEntity.ok(apiResponse);
     }
 
@@ -88,8 +89,9 @@ public class BookingController {
     }
 
     @PostMapping("/appointment/download")
-    public ResponseEntity<byte[]> downloadBooking(@RequestBody BookingRetrieveDto bookingRetrieveDto) {
-        List<BookingResponse> booking = bookingService.getBooking(bookingRetrieveDto);
+    @Operation(summary = "Download appointment")
+    public ResponseEntity<byte[]> downloadAppointment(@RequestBody BookingRetrieveDto bookingRetrieveDto) {
+        List<BookingResponse> booking = bookingService.getAppointment(bookingRetrieveDto);
         ApiResponse apiResponse = new ApiResponse();
         apiResponse.setData(booking);
 

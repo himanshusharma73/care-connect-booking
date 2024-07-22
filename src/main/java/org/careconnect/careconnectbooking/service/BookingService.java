@@ -16,7 +16,7 @@ public interface BookingService {
 
     BookingAppointment bookAppointment(DoctorDto doctorDto, PatientDto patientDto, BookingDto bookingDto);
 
-    List<BookingResponse> getBooking(BookingRetrieveDto bookingRetrieveDto);
+    List<BookingResponse> getAppointment(BookingRetrieveDto bookingRetrieveDto);
 
     BookingAppointment checkUp(RequestDto requestDto);
 }
